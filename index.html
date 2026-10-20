@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>zen</title>
+<meta name="description" content="zen's little corner of the internet">
+<meta name="theme-color" content="#0a0a0b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"></noscript>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0a0a0b;
+    --text: #f4f4f5;
+    --body: #c9c9ce;
+    --muted: #8b8b92;
+    --faint: #5f5f66;
+    --card: linear-gradient(145deg, rgba(255,255,255,.085), rgba(255,255,255,.022));
+    --card-hover: linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.04));
+    --line: rgba(255, 255, 255, 0.09);
+    --line-strong: rgba(255, 255, 255, 0.16);
+    --sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --ease: cubic-bezier(.22, .8, .24, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  img, svg { display: block; }
+  :focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 8px; }
+
+  /* ambient layers */
+  .spot {
+    position: fixed; left: -300px; top: -300px; width: 600px; height: 600px; z-index: 0; pointer-events: none;
+    background: radial-gradient(closest-side, rgba(255, 255, 255, 0.06), transparent);
+    transform: translate3d(50vw, 35vh, 0); will-change: transform;
+  }
+  .ambient {
+    position: fixed; inset: -6%; z-index: 0; pointer-events: none;
+    background-size: cover; background-position: center;
+    filter: blur(48px) saturate(1.25);
+    opacity: 0;
+    transition: opacity .8s ease;
+  }
+  .ambient.on { opacity: .3; }
+  .fog, .grain, .ambient { display: none !important; }
+  .fade-bottom {
+    position: fixed; left: 0; right: 0; bottom: 0; height: 150px; z-index: 3; pointer-events: none;
+    background: linear-gradient(to top, var(--bg) 20%, rgba(10, 10, 11, 0));
+  }
+
+  .wrap {
+    position: relative; z-index: 2;
+    width: min(620px, 100% - 32px);
+    margin: 0 auto;
+    padding: 56px 0 140px;
+    min-height: 100vh; min-height: 100dvh;
+  }
+  .wrap.home { display: flex; flex-direction: column; justify-content: center; padding-top: 24px; }
+
+  main { outline: none; transition: opacity .3s var(--ease), transform .3s var(--ease), filter .3s var(--ease); }
+  main.leaving { opacity: 0; transform: translateY(8px); }
+  main.entering { opacity: 0; transform: translateY(-6px); }
+  .page { display: none; }
+  html:not(.ready) .page[data-route="/"] { display: block; }
+  .page.active { display: block; }
+
+  /* eyebrow + headings */
+  .eyebrow { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+  .eyebrow::before { content: ""; width: 16px; height: 1px; background: var(--faint); }
+  h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; }
+  h2 { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 18px; }
+  .handle { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .intro-text { color: var(--muted); max-width: 32em; margin-bottom: 30px; font-size: 15px; }
+  .group-label { color: var(--muted); font-size: 13px; margin: 34px 0 12px; display: flex; align-items: center; gap: 10px; }
+  .group-label::before { content: ""; width: 16px; height: 1px; background: var(--faint); }
+
+  /* home */
+  .intro {
+    margin-top: 18px;
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--card);
+    color: var(--body);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .socials { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .icon-btn {
+    width: 38px; height: 34px;
+    display: grid; place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--body);
+    transition: background .2s, border-color .2s, transform .2s var(--ease), color .2s;
+  }
+  .icon-btn:hover { background: var(--card-hover); border-color: var(--line-strong); color: #fff; transform: translateY(-2px); }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .fill { fill: currentColor; }
+  .stroke { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* cards */
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--card);
+    transition: background .25s, border-color .25s, transform .3s var(--ease);
+  }
+  a.card:hover, .card.hoverable:hover { background: var(--card-hover); border-color: var(--line-strong); transform: translateY(-2px); }
+
+  /* projects */
+  .project { overflow: hidden; display: block; }
+  .shot { position: relative; background: #0f0f12; }
+  .shot img.banner { width: 100%; aspect-ratio: 16 / 8; object-fit: cover; }
+  .shot::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(10, 10, 11, .85), transparent 55%); }
+  .project-body { padding: 4px 18px 18px; position: relative; margin-top: -34px; z-index: 1; }
+  .project-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  .project-title img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line-strong); }
+  .badge { font-size: 11.5px; font-weight: 500; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; }
+  .project p { color: var(--body); margin-bottom: 16px; }
+  .project-foot { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 14px; }
+  .project-foot .more { display: inline-flex; align-items: center; gap: 6px; transition: color .2s, gap .25s var(--ease); }
+  .project:hover .more { color: #fff; gap: 10px; }
+  .project-foot svg { width: 14px; height: 14px; }
+
+  /* skills */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px 6px 8px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    font-size: 13.5px; font-weight: 500;
+    transition: background .2s, border-color .2s, transform .2s var(--ease);
+  }
+  .chip:hover { background: var(--card-hover); border-color: var(--line-strong); transform: translateY(-2px); }
+  .mark { width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; font-size: 9.5px; font-weight: 700; font-family: var(--sans); letter-spacing: -0.02em; }
+
+  /* rows: music, links */
+  .rows { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .row { display: flex; align-items: center; gap: 14px; padding: 12px 14px; }
+  .row .thumb { width: 46px; height: 46px; border-radius: 10px; flex: none; object-fit: cover; background: rgba(255, 255, 255, 0.06); }
+  .row .logo { width: 46px; height: 46px; border-radius: 12px; flex: none; display: grid; place-items: center; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.05); }
+  .row .logo svg { width: 20px; height: 20px; }
+  .row .meta { flex: 1; min-width: 0; }
+  .meta .title { font-weight: 600; font-size: 15px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .meta .sub { color: var(--muted); font-size: 13px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .meta .sub .mono { font-family: var(--mono); font-size: 11.5px; color: var(--faint); margin-left: 6px; }
+  .row .chev { width: 16px; height: 16px; color: var(--faint); flex: none; transition: transform .25s var(--ease), color .2s; }
+  a.row:hover .chev { transform: translateX(3px); color: #fff; }
+
+  /* contact */
+  .contact { padding: 14px; display: flex; align-items: center; gap: 14px; }
+  .contact .meta { flex: 1; min-width: 0; }
+  .actions { display: flex; gap: 6px; flex: none; }
+  .pill-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 30px; padding: 0 11px;
+    border: 1px solid var(--line); border-radius: 8px;
+    background: var(--card);
+    color: var(--body);
+    font-size: 12.5px; font-weight: 500;
+    transition: background .2s, border-color .2s, color .2s;
+  }
+  .pill-btn:hover { background: var(--card-hover); border-color: var(--line-strong); color: #fff; }
+  .pill-btn svg { width: 13px; height: 13px; }
+  .pill-btn.square { width: 30px; padding: 0; justify-content: center; }
+  .pill-btn.ok { color: #86efac; border-color: rgba(134, 239, 172, .35); }
+
+  /* bottom nav */
+  .dock {
+    position: fixed; z-index: 10;
+    left: 50%; transform: translateX(-50%);
+    bottom: calc(18px + env(safe-area-inset-bottom));
+    display: flex; gap: 4px; padding: 5px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: rgba(16, 16, 18, 0.78);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+  }
+  .dock a {
+    width: 42px; height: 38px;
+    display: grid; place-items: center;
+    border-radius: 11px;
+    border: 1px solid transparent;
+    color: var(--muted);
+    transition: color .2s, background .2s, border-color .2s, transform .25s var(--ease);
+  }
+  .dock a:hover { color: #fff; transform: translateY(-2px); }
+  .dock a[aria-current="page"] { color: #fff; background: rgba(255, 255, 255, 0.1); border-color: var(--line-strong); }
+  .dock svg { width: 18px; height: 18px; }
+
+  .toast {
+    position: fixed; z-index: 20; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom));
+    transform: translate(-50%, 8px); max-width: min(92vw, 420px);
+    padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.4; text-align: center;
+    background: rgba(24, 24, 27, .96); border: 1px solid var(--line-strong); color: var(--text);
+    opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s var(--ease);
+  }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+  /* glassmorphism */
+  .card, .intro, .icon-btn, .chip, .pill-btn {
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.11), inset 0 0 0 1px rgba(255,255,255,.02), 0 10px 30px rgba(0,0,0,.28);
+  }
+  .card:hover, .icon-btn:hover, .chip:hover, .pill-btn:hover {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 14px 36px rgba(0,0,0,.36);
+  }
+  .dock { background: rgba(18,18,20,.55); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 12px 40px rgba(0,0,0,.5); }
+  .mark { background: rgba(255,255,255,.1) !important; color: var(--body) !important; }
+
+  /* living background so the glass has something to blur */
+  .aura {
+    --c1: rgba(120, 130, 185, .16); --c2: rgba(170, 120, 135, .11); --c3: rgba(100, 140, 160, .09);
+    position: fixed; inset: -20%; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(40% 36% at 22% 18%, var(--c1), transparent 70%),
+      radial-gradient(36% 32% at 82% 74%, var(--c2), transparent 70%),
+      radial-gradient(32% 28% at 55% 105%, var(--c3), transparent 70%);
+    animation: drift 40s ease-in-out infinite alternate;
+  }
+  @keyframes drift { to { transform: translate3d(5%, 4%, 0) scale(1.1); } }
+  .ambient { animation: drift 40s ease-in-out infinite alternate; }
+  .grain {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .07; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  /* cards rise in one after another when a page opens */
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+  .page.active .card, .page.active .chip, .page.active .intro, .page.active .icon-btn {
+    animation: rise .55s var(--ease) backwards;
+    animation-delay: calc(var(--i, 0) * 55ms);
+  }
+
+
+  /* intro links */
+  .intro a { color: var(--text); font-weight: 600; border-bottom: 1px solid rgba(255,255,255,.25); transition: border-color .2s; }
+  .intro a:hover { border-color: var(--text); }
+
+  /* music tabs + cover grid */
+  .tabs { display: flex; gap: 4px; padding: 4px; border-radius: 14px; margin-bottom: 14px; border: 1px solid var(--line); background: var(--card); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); box-shadow: inset 0 1px 0 rgba(255,255,255,.1); }
+  .tab { flex: 1; height: 36px; border-radius: 10px; color: var(--muted); font-weight: 500; font-size: 14px; transition: color .2s, background .2s; }
+  .tab:hover { color: #fff; }
+  .tab.on { color: #fff; background: rgba(0,0,0,.35); box-shadow: inset 0 0 0 1px var(--line); }
+  .tabpanel[hidden] { display: none; }
+  .grid { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .tile { position: relative; display: block; aspect-ratio: 1; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: rgba(255,255,255,.06); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 10px 30px rgba(0,0,0,.35); transition: transform .3s var(--ease), border-color .25s; }
+  .tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(.85) brightness(.88); transition: transform .5s var(--ease), filter .3s; }
+  .tile:hover { transform: translateY(-2px); border-color: var(--line-strong); }
+  .tile:hover img { transform: scale(1.06); filter: none; }
+  .tile .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 26px 12px 11px; background: linear-gradient(to top, rgba(8,8,10,.9), transparent); }
+  .tile .t { display: block; font-weight: 600; font-size: 14px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile .s { display: block; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .page.active .tile { animation: rise .55s var(--ease) backwards; animation-delay: calc(var(--i, 0) * 55ms); }
+
+  /* views */
+  .views { position: fixed; z-index: 4; bottom: calc(80px + env(safe-area-inset-bottom)); right: max(18px, calc((100vw - 620px) / 2)); display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 500; pointer-events: none; }
+  .views svg { width: 13px; height: 13px; }
+
+  /* textured, moving background */
+  .fog {
+    position: fixed; inset: -8%; z-index: 0; pointer-events: none; opacity: .14; mix-blend-mode: normal;
+    background-size: 800px 800px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='800'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.006 0.009' numOctaves='3' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .78  0 0 0 0 .78  0 0 0 0 .8  1.6 0 0 0 -.4'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>");
+    animation: fogmove 70s linear infinite alternate;
+    transition: opacity 1s;
+  }
+  @keyframes fogmove { to { transform: translate3d(3%, 2%, 0) scale(1.05); } }
+  body[data-route="/contact"] .fog { opacity: .3; }
+  body[data-route="/links"] .fog, body[data-route="/music"] .fog { opacity: .1; }
+  .grain { inset: 0; opacity: .05; mix-blend-mode: normal; animation: none; }
+  @keyframes grain {
+    0% { transform: translate3d(0,0,0); } 20% { transform: translate3d(-6%,-9%,0); } 40% { transform: translate3d(-12%,4%,0); }
+    60% { transform: translate3d(7%,-14%,0); } 80% { transform: translate3d(-3%,12%,0); } 100% { transform: translate3d(0,0,0); }
+  }
+
+
+
+
+  /* colored artwork shows while covers load, or if they can't */
+  .tile, .thumbwrap { background: linear-gradient(145deg, hsl(var(--h, 30) 34% 32%), hsl(calc(var(--h, 30) + 40) 40% 14%)); }
+  .thumbwrap { width: 46px; height: 46px; border-radius: 10px; overflow: hidden; flex: none; border: 1px solid var(--line); }
+  .row .thumbwrap .thumb { width: 100%; height: 100%; border-radius: 0; display: block; background: none; }
+
+  .touch { position: fixed; left: 0; top: 0; z-index: 30; pointer-events: none; width: 0; height: 0; will-change: transform; }
+  .touch i {
+    position: absolute; left: -12px; top: -12px; width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.28);
+    box-shadow: 0 0 0 4px rgba(255,255,255,.03);
+    opacity: 0; transform: scale(.5);
+    transition: opacity .2s ease, transform .28s var(--ease);
+  }
+  .touch.on i { opacity: 1; transform: scale(1); }
+
+
+  /* in-site music player */
+  .player {
+    position: fixed; z-index: 9; left: 50%; transform: translateX(-50%);
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    width: min(620px, 100% - 32px);
+    padding: 6px; border-radius: 18px;
+    border: 1px solid var(--line);
+    background: rgba(18,18,20,.6);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 12px 40px rgba(0,0,0,.5);
+    animation: rise .45s var(--ease) backwards;
+  }
+  .player[hidden] { display: none; }
+  .player iframe { display: block; width: 100%; height: 80px; border: 0; border-radius: 12px; color-scheme: normal; }
+  .player-x {
+    position: absolute; top: -10px; right: -6px; width: 26px; height: 26px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: rgba(18,18,20,.92); border: 1px solid var(--line-strong); color: var(--body);
+    transition: color .2s, transform .2s var(--ease);
+  }
+  .player-link {
+    position: absolute; top: -12px; left: 12px; height: 24px; padding: 0 10px; display: inline-flex; align-items: center;
+    border-radius: 999px; font-size: 11.5px; font-weight: 600; color: var(--body);
+    background: rgba(18,18,20,.92); border: 1px solid var(--line-strong);
+    transition: color .2s;
+  }
+  .player-link:hover { color: #fff; }
+  .player-x:hover { color: #fff; transform: scale(1.08); }
+  .player-x svg { width: 12px; height: 12px; }
+  body.player-open .views { bottom: calc(172px + env(safe-area-inset-bottom)); }
+  body.player-open .wrap { padding-bottom: 240px; }
+  .tile.playing, .row.playing { border-color: rgba(255,255,255,.42); }
+  .tile.playing::after {
+    content: ""; position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; border-radius: 50%;
+    background: #fff; box-shadow: 0 0 0 0 rgba(255,255,255,.6); animation: pulse 1.6s ease-out infinite;
+  }
+  .row.playing .title::after { content: " ·"; color: #fff; }
+  @keyframes pulse { to { box-shadow: 0 0 0 10px rgba(255,255,255,0); } }
+
+
+  /* cover grid like cosmin.gg: art only, text appears on hover / while playing */
+  .grid { gap: 12px; }
+  .tile { border-radius: 18px; border-color: rgba(255,255,255,.07); }
+  .tile img { filter: saturate(.92) brightness(.9); }
+  .tile::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; border-radius: inherit; box-shadow: inset 0 0 46px rgba(0,0,0,.4); }
+  .tile .cap { z-index: 2; opacity: 0; transform: translateY(6px); transition: opacity .25s, transform .3s var(--ease); }
+  .tile:hover .cap, .tile:focus-visible .cap, .tile.playing .cap, .tile.nocover .cap { opacity: 1; transform: none; }
+  .tile.nocover .cap { top: 0; display: flex; flex-direction: column; justify-content: flex-end; background: linear-gradient(to top, rgba(8,8,10,.6), transparent 70%); padding: 14px; }
+  .tile.nocover .t { font-size: 17px; white-space: normal; }
+  .tile.playing::after { z-index: 3; }
+
+  /* the music page takes on a deep navy tint, like his */
+  body { transition: background .6s ease; }
+  body[data-route="/music"], body[data-route="/links"] { --bg: #0a0c1e; }
+  body[data-route="/music"] .aura, body[data-route="/links"] .aura { --c1: rgba(110, 100, 230, .22); --c2: rgba(150, 90, 200, .14); --c3: rgba(80, 120, 220, .12); }
+  body[data-route="/music"] .dock, body[data-route="/links"] .dock { background: rgba(26,22,62,.62); border-color: rgba(140,120,255,.3); }
+  body[data-route="/music"] .dock a[aria-current="page"], body[data-route="/links"] .dock a[aria-current="page"] { background: rgba(120,100,255,.3); border-color: rgba(160,140,255,.55); }
+  .fade-bottom { background: linear-gradient(to top, var(--bg) 20%, transparent); }
+
+
+  /* biolinks rows, tinted by each site's color */
+  .row .logo.big { width: 54px; height: 54px; border-radius: 17px; color: rgb(var(--tint-rgb, 255,255,255)); }
+  .row .logo.big svg { width: 26px; height: 26px; }
+  .row.tinted { padding: 14px 16px 14px 14px; background: linear-gradient(90deg, rgba(var(--tint-rgb), .17), transparent 72%), var(--card); }
+  a.row.tinted:hover { background: linear-gradient(90deg, rgba(var(--tint-rgb), .26), transparent 78%), var(--card-hover); }
+  .row.tinted .title { font-size: 19px; letter-spacing: -0.01em; }
+  .row.tinted .url { margin-left: 8px; font-size: 13px; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+
+  @media (hover: none) and (pointer: coarse) { .aura, .fog, .ambient { animation: none; } }
+
+
+  /* soft glow that gently follows your finger / cursor */
+  .spot {
+    position: fixed; left: -360px; top: -360px; width: 720px; height: 720px; z-index: 0; pointer-events: none;
+    background: radial-gradient(closest-side, var(--spot, rgba(140, 150, 220, .11)), transparent);
+    transform: translate3d(50vw, 32vh, 0); will-change: transform;
+  }
+  body[data-route="/music"], body[data-route="/links"] { --spot: rgba(125, 105, 255, .15); }
+
+  @media (min-width: 700px) {
+    body { font-size: 16px; }
+    .wrap { padding-top: 80px; }
+    h1, h2 { font-size: 34px; }
+  }
+  @media (max-width: 400px) {
+    .contact { flex-wrap: wrap; }
+    .actions { width: 100%; padding-left: 58px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    main, main.leaving, main.entering { transition: none; transform: none; filter: none; }
+    .card, .icon-btn, .chip, .dock a, .project-foot .more, .row .chev { transition: none; }
+    a.card:hover, .icon-btn:hover, .chip:hover, .dock a:hover { transform: none; }
+    .ambient { transition: none; animation: none; }
+    .aura, .fog, .grain, .player, .tile.playing::after { animation: none; }
+    .page.active .tile { animation: none; }
+    .tile, .tile img { transition: none; }
+    .page.active .card, .page.active .chip, .page.active .intro, .page.active .icon-btn { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="spot" id="spot" aria-hidden="true"></div>
+<div class="aura" aria-hidden="true"></div>
+<div class="ambient" id="ambient" aria-hidden="true"></div>
+
+<div class="wrap" id="wrap">
+  <main id="main" tabindex="-1">
+
+    <!-- home -->
+    <section class="page" data-route="/" data-title="zen" data-home="1">
+      <div class="eyebrow">hey there</div>
+      <h1>zen</h1>
+      <div class="handle">@whiniesttt</div>
+      <div class="intro">i make random stuff with code when i'm bored. sometimes it works. check out my <a href="#/projects" data-route="/projects">projects</a> or find me on <a href="https://discord.com/users/1530872106399567941" target="_blank" rel="noopener">discord</a> or <a href="https://instagram.com/vibhorxz" target="_blank" rel="noopener">instagram</a>.</div>
+      <div class="socials">
+        <a class="icon-btn" href="https://discord.com/users/1530872106399567941" target="_blank" rel="noopener" aria-label="Discord" title="Discord">
+          <svg class="fill" viewBox="0 0 24 24"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.2.5a18 18 0 0 1 4.4 1.4 15 15 0 0 0-15.2 0A18 18 0 0 1 8.8 3.5L8.6 3a19.8 19.8 0 0 0-4.9 1.4C.6 9 -.3 13.5.1 18a20 20 0 0 0 6 3l1.3-2.1a13 13 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a13 13 0 0 1-2 1l1.3 2.1a20 20 0 0 0 6-3c.5-5.2-.8-9.7-3.6-13.6ZM8.5 15.3c-1.2 0-2.1-1.1-2.1-2.4 0-1.4.9-2.4 2.1-2.4s2.1 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4Zm7 0c-1.2 0-2.1-1.1-2.1-2.4 0-1.4.9-2.4 2.1-2.4s2.1 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4Z"/></svg>
+        </a>
+        <a class="icon-btn" href="https://github.com/whiniestt" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub">
+          <svg class="fill" viewBox="0 0 24 24"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.69 1.25 3.35.96.1-.74.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.16 1.18a10.9 10.9 0 0 1 5.76 0c2.2-1.49 3.16-1.18 3.16-1.18.62 1.59.23 2.76.11 3.05.74.8 1.18 1.82 1.18 3.08 0 4.42-2.7 5.4-5.27 5.68.41.36.78 1.06.78 2.13v3.16c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
+        </a>
+        <a class="icon-btn" href="https://instagram.com/vibhorxz" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">
+          <svg class="fill" viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 3.3.1 4.8 1.7 4.9 4.9.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 3.2-1.7 4.8-4.9 4.9-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-3.3-.1-4.8-1.7-4.9-4.9C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8C2.4 3.9 4 2.4 7.2 2.3 8.4 2.2 8.8 2.2 12 2.2ZM12 0C8.7 0 8.3 0 7.1.1 2.7.3.3 2.7.1 7.1 0 8.3 0 8.7 0 12s0 3.7.1 4.9c.2 4.4 2.6 6.8 7 7C8.3 24 8.7 24 12 24s3.7 0 4.9-.1c4.4-.2 6.8-2.6 7-7 .1-1.2.1-1.6.1-4.9s0-3.7-.1-4.9c-.2-4.4-2.6-6.8-7-7C15.7 0 15.3 0 12 0Zm0 5.8a6.2 6.2 0 1 0 0 12.4 6.2 6.2 0 0 0 0-12.4ZM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm6.4-11.8a1.4 1.4 0 1 0 0 2.9 1.4 1.4 0 0 0 0-2.9Z"/></svg>
+        </a>
+      </div>
+    </section>
+
+    <!-- music -->
+    <section class="page" data-route="/music" data-title="music · zen">
+      <div class="eyebrow">my taste</div>
+      <h2>music</h2>
+      <p class="intro-text">what's been on repeat for the past month</p>
+      <div class="tabs" role="tablist" aria-label="music view">
+        <button class="tab on" role="tab" aria-selected="true" data-tab="grid">Covers</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="list">Tracks</button>
+      </div>
+      <div class="tabpanel" id="panel-grid">
+        <ul class="grid">
+          <li><a class="tile track nocover" href="https://open.spotify.com/search/The%20Less%20I%20Know%20the%20Better%20Tame%20Impala" target="_blank" rel="noopener" style="--h:205" aria-label="The Less I Know the Better by Tame Impala">
+            <span class="cap"><span class="t">The Less I Know the Better</span><span class="s">Tame Impala</span></span></a></li>
+          <li><a class="tile track nocover" href="https://open.spotify.com/search/Heat%20Waves%20Glass%20Animals" target="_blank" rel="noopener" style="--h:28" aria-label="Heat Waves by Glass Animals">
+            <span class="cap"><span class="t">Heat Waves</span><span class="s">Glass Animals</span></span></a></li>
+          <li><a class="tile track nocover" href="https://open.spotify.com/search/Starboy%20The%20Weeknd" target="_blank" rel="noopener" style="--h:350" aria-label="Starboy by The Weeknd">
+            <span class="cap"><span class="t">Starboy</span><span class="s">The Weeknd</span></span></a></li>
+          <li><a class="tile track" href="https://open.spotify.com/track/3KkXRkHbMCARz0aVfEt68P" target="_blank" rel="noopener" data-cover="https://i.scdn.co/image/ab67616d0000b273e2e352d89826aef6dbd5ff8f" style="--h:40" aria-label="Sunflower by Post Malone, Swae Lee">
+            <img src="https://i.scdn.co/image/ab67616d0000b273e2e352d89826aef6dbd5ff8f" alt="" loading="lazy" onerror="this.style.display='none'">
+            <span class="cap"><span class="t">Sunflower</span><span class="s">Post Malone, Swae Lee</span></span></a></li>
+          <li><a class="tile track nocover" href="https://open.spotify.com/search/Do%20I%20Wanna%20Know%3F%20Arctic%20Monkeys" target="_blank" rel="noopener" style="--h:225" aria-label="Do I Wanna Know? by Arctic Monkeys">
+            <span class="cap"><span class="t">Do I Wanna Know?</span><span class="s">Arctic Monkeys</span></span></a></li>
+          <li><a class="tile track" href="https://open.spotify.com/track/5XeFesFbtLpXzIVDNQP22n" target="_blank" rel="noopener" data-cover="https://i.scdn.co/image/ab67616d0000b2734ae1c4c5c45aabe565499163" style="--h:335" aria-label="I Wanna Be Yours by Arctic Monkeys">
+            <img src="https://i.scdn.co/image/ab67616d0000b2734ae1c4c5c45aabe565499163" alt="" loading="lazy" onerror="this.style.display='none'">
+            <span class="cap"><span class="t">I Wanna Be Yours</span><span class="s">Arctic Monkeys</span></span></a></li>
+          <li><a class="tile track nocover" href="https://open.spotify.com/search/Cinnamon%20Girl%20Lana%20Del%20Rey" target="_blank" rel="noopener" style="--h:160" aria-label="Cinnamon Girl by Lana Del Rey">
+            <span class="cap"><span class="t">Cinnamon Girl</span><span class="s">Lana Del Rey</span></span></a></li>
+          <li><a class="tile track nocover" href="https://open.spotify.com/search/Ultraviolence%20Lana%20Del%20Rey" target="_blank" rel="noopener" style="--h:260" aria-label="Ultraviolence by Lana Del Rey">
+            <span class="cap"><span class="t">Ultraviolence</span><span class="s">Lana Del Rey</span></span></a></li>
+          <li><a class="tile track nocover" href="https://open.spotify.com/search/Let%20It%20Happen%20Tame%20Impala" target="_blank" rel="noopener" style="--h:300" aria-label="Let It Happen by Tame Impala">
+            <span class="cap"><span class="t">Let It Happen</span><span class="s">Tame Impala</span></span></a></li>
+          <li><a class="tile track" href="https://open.spotify.com/track/2QjOHCTQ1Jl3zawyYOpxh6" target="_blank" rel="noopener" data-cover="https://i.scdn.co/image/ab67616d0000b2738265a736a1eb838ad5a0b921" style="--h:172" aria-label="Sweater Weather by The Neighbourhood">
+            <img src="https://i.scdn.co/image/ab67616d0000b2738265a736a1eb838ad5a0b921" alt="" loading="lazy" onerror="this.style.display='none'">
+            <span class="cap"><span class="t">Sweater Weather</span><span class="s">The Neighbourhood</span></span></a></li>
+        </ul>
+      </div>
+      <div class="tabpanel" id="panel-list" hidden>
+        <ul class="rows">
+          <li><a class="card row track" href="https://open.spotify.com/search/The%20Less%20I%20Know%20the%20Better%20Tame%20Impala" target="_blank" rel="noopener">
+            <span class="thumbwrap" style="--h:205"></span>
+            <span class="meta"><span class="title">The Less I Know the Better</span><span class="sub">Tame Impala</span></span>
+            <svg class="chev stroke" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a></li>
+          <li><a class="card row track" href="https://open.spotify.com/search/Heat%20Waves%20Glass%20Animals" target="_blank" rel="noopener">
+            <span class="thumbwrap" style="--h:28"></span>
+            <span class="meta"><span class="title">Heat Waves</span><span class="sub">Glass Animals</span></span>
+            <svg class="chev stroke" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a></li>
+          <li><a class="card row track" href="https://open.spotify.com/search/Starboy%20The%20Weeknd" target="_blank" rel="noopener">
+            <span class="thumbwrap" style="--h:350"></span>
+            <span class="meta"><span class="title">Starboy</span><span class="sub">The Weeknd</span></span>
+            <svg class="chev stroke" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a></li>
+          <li><a class="card row track" href="https://open.spotify.com/track/3KkXRkHbMCARz0aVfEt68P" target="_blank" rel="noopener" data-cover="https://i.scdn.co/image/ab67616d0000b273e2e352d89826aef6dbd5ff8f">
+            <span class="thumbwrap" style="--h:40"><img class="thumb" src="https://i.scdn.co/image/ab67616d0000b273e2e352d89826aef6dbd5ff8f" alt="" loading="lazy" onerror="this.style.display='none'"></span>
+            <span class="meta"><span class="title">Sunflower</span><span class="sub">Post Malone, Swae Lee</span></span>
+            <svg class="chev stroke" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a></li>
+          <li><a class="card row track" href="https://open.spotify.com/search/Do%20I%20Wanna%20Know%3F%20Arctic%20Monkeys" target="_blank" rel="noopener">
+            <span class="thumbwrap" style="--h:225"></span>
+            <span class="meta"><span class="title">Do I Wanna Know?</span><span class="sub">Arctic Monkeys</span></span>
+            <svg class="chev stroke" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a></li>
+          <li><a class="card row track" href="https://open.spotify.com/track/5XeFesFbtLpXzIVDNQP22n" target="_blank" rel="noopener" data-cover="https://i.scdn.co/image/ab67616d0000b2734ae1c4c5c45aabe565499163">
+            <span class="thumbwrap" style="--h:335"><img class="thumb" src="https://i.scdn.co/image/ab67616d0000b2734ae1c4c5c45aabe565499163" alt="" loading="lazy" onerror="this.style.display='none'"></span>
+            <span class="meta"><span class="title">I Wanna Be Yours</span><span class="sub">Arctic Monkeys</span></span>
+            <svg class="chev stroke" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a></li>
+          <li><a class="card row track" href="https://open.spotify.com/search/Cinnamon%20Girl%20Lana%20Del%20Rey" target="_blank" rel="noopener">
+            <span class="thumbwrap" style="--h:160"></span>
+            <span class="meta"><span class="title">Cinnamon Girl</span><span class="sub">Lana Del Rey</span></span>
+            <svg class="chev stroke" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a></li>
+          <li><a class="card row track" href="https://open.spotify.com/search/Ultraviolence%20Lana%20Del%20Rey" target="_blank" rel="noopener">
+            <span class="thumbwrap" style="--h:260"></span>
+            <span class="meta"><span class="title">Ultraviolence</span><span class="sub">Lana Del Rey</span></span>
+            <svg class="chev stroke" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a></li>
+          <li><a class="card row track" href="https://open.spotify.com/search/Let%20It%20Happen%20Tame%20Impala" target="_blank" rel="noopener">
+            <span class="thumbwrap" style="--h:300"></span>
+            <span class="meta"><span class="title">Let It Happen</span><span class="sub">Tame Impala</span></span>
+            <svg class="chev stroke" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a></li>
+          <li><a class="card row track" href="https://open.spotify.com/track/2QjOHCTQ1Jl3zawyYOpxh6" target="_blank" rel="noopener" data-cover="https://i.scdn.co/image/ab67616d0000b2738265a736a1eb838ad5a0b921">
+            <span class="thumbwrap" style="--h:172"><img class="thumb" src="https://i.scdn.co/image/ab67616d0000b2738265a736a1eb838ad5a0b921" alt="" loading="lazy" onerror="this.style.display='none'"></span>
+            <span class="meta"><span class="title">Sweater Weather</span><span class="sub">The Neighbourhood</span></span>
+            <svg class="chev stroke" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- projects -->
+    <section class="page" data-route="/projects" data-title="projects · zen">
+      <div class="eyebrow">my work</div>
+      <h2>projects</h2>
+      <p class="intro-text">stuff i'm building.</p>
+      <a class="card project" href="https://discord.com/oauth2/authorize?client_id=1514506916993306744&permissions=8&integration_type=0&scope=bot+applications.commands" target="_blank" rel="noopener">
+        <div class="shot"><img class="banner" src="banner.jpg" alt="Fare banner"></div>
+        <div class="project-body">
+          <div class="project-title"><img src="avatar.jpg" alt="">Fare <span class="badge">work in progress</span></div>
+          <p>a multipurpose discord bot made for servers. like heist, but for whole communities instead of individual users.</p>
+          <div class="project-foot">
+            <span class="more">add to server <svg class="stroke" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span>
+          </div>
+        </div>
+      </a>
+    </section>
+
+    <!-- skills -->
+    <section class="page" data-route="/skills" data-title="skills · zen">
+      <div class="eyebrow">my tech stack</div>
+      <h2>skills</h2>
+      <p class="intro-text">what i use to build things.</p>
+      <div class="group-label">languages</div>
+      <div class="chips">
+        <span class="chip"><span class="mark" style="background:#f7df1e;color:#111">JS</span>JavaScript</span>
+        <span class="chip"><span class="mark" style="background:#e44d26;color:#fff">H</span>HTML</span>
+        <span class="chip"><span class="mark" style="background:#2965f1;color:#fff">C</span>CSS</span>
+      </div>
+      <div class="group-label">frameworks &amp; libraries</div>
+      <div class="chips">
+        <span class="chip"><span class="mark" style="background:#5fa04e;color:#fff">N</span>Node.js</span>
+      </div>
+    </section>
+
+    <!-- links -->
+    <section class="page" data-route="/links" data-title="biolinks · zen">
+      <div class="eyebrow">link-in-bio</div>
+      <h2>biolinks</h2>
+      <p class="intro-text">my biolinks</p>
+      <ul class="rows">
+        <li><a class="card row tinted" style="--tint-rgb:167,139,250" href="https://guns.lol/whiniestt" target="_blank" rel="noopener">
+          <span class="logo big"><svg class="stroke" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M22 12h-4.5M6.5 12H2M12 6.5V2M12 22v-4.5"/></svg></span>
+          <span class="meta"><span class="title">guns.lol <span class="url">guns.lol/whiniestt</span></span></span>
+          <svg class="chev stroke" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a></li>
+        <li><a class="card row tinted" style="--tint-rgb:129,140,248" href="https://feds.lol/whiniest" target="_blank" rel="noopener">
+          <span class="logo big"><svg class="stroke" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+          <span class="meta"><span class="title">feds.lol <span class="url">feds.lol/whiniest</span></span></span>
+          <svg class="chev stroke" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a></li>
+        <li><a class="card row tinted" style="--tint-rgb:244,114,182" href="https://haunt.gg/whiniestt" target="_blank" rel="noopener">
+          <span class="logo big"><svg class="stroke" viewBox="0 0 24 24"><path d="M9 10h.01"/><path d="M15 10h.01"/><path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/></svg></span>
+          <span class="meta"><span class="title">haunt <span class="url">haunt.gg/whiniestt</span></span></span>
+          <svg class="chev stroke" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a></li>
+      </ul>
+    </section>
+
+    <!-- contact -->
+    <section class="page" data-route="/contact" data-title="contact · zen">
+      <div class="eyebrow">get in touch</div>
+      <h2>contact</h2>
+      <p class="intro-text">open for collabs, questions, or just a hello — discord's fastest, but pick whatever works.</p>
+      <ul class="rows">
+        <li class="card contact">
+          <span class="logo" style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--line);background:rgba(255,255,255,.05);flex:none"><svg class="fill" style="width:20px;height:20px" viewBox="0 0 24 24"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.2.5a18 18 0 0 1 4.4 1.4 15 15 0 0 0-15.2 0A18 18 0 0 1 8.8 3.5L8.6 3a19.8 19.8 0 0 0-4.9 1.4C.6 9 -.3 13.5.1 18a20 20 0 0 0 6 3l1.3-2.1a13 13 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a13 13 0 0 1-2 1l1.3 2.1a20 20 0 0 0 6-3c.5-5.2-.8-9.7-3.6-13.6ZM8.5 15.3c-1.2 0-2.1-1.1-2.1-2.4 0-1.4.9-2.4 2.1-2.4s2.1 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4Zm7 0c-1.2 0-2.1-1.1-2.1-2.4 0-1.4.9-2.4 2.1-2.4s2.1 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4Z"/></svg></span>
+          <span class="meta"><span class="title">Discord</span><span class="sub">open my profile and say hi</span></span>
+          <span class="actions">
+            <button class="pill-btn" data-copy="1530872106399567941" aria-label="Copy Discord user ID"><svg class="stroke" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>copy id</span></button>
+            <a class="pill-btn" href="https://discord.com/users/1530872106399567941" target="_blank" rel="noopener" aria-label="Open Discord profile"><svg class="stroke" viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg><span>open</span></a>
+          </span>
+        </li>
+        <li class="card contact">
+          <span class="logo" style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--line);background:rgba(255,255,255,.05);flex:none"><svg class="fill" style="width:20px;height:20px" viewBox="0 0 24 24"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.69 1.25 3.35.96.1-.74.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.16 1.18a10.9 10.9 0 0 1 5.76 0c2.2-1.49 3.16-1.18 3.16-1.18.62 1.59.23 2.76.11 3.05.74.8 1.18 1.82 1.18 3.08 0 4.42-2.7 5.4-5.27 5.68.41.36.78 1.06.78 2.13v3.16c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg></span>
+          <span class="meta"><span class="title">@whiniestt</span><span class="sub">GitHub</span></span>
+          <span class="actions">
+            <button class="pill-btn square" data-copy="whiniestt" aria-label="Copy GitHub username"><svg class="stroke" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+            <a class="pill-btn square" href="https://github.com/whiniestt" target="_blank" rel="noopener" aria-label="Open GitHub profile"><svg class="stroke" viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg></a>
+          </span>
+        </li>
+        <li class="card contact">
+          <span class="logo" style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--line);background:rgba(255,255,255,.05);flex:none"><svg class="fill" style="width:20px;height:20px" viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 3.3.1 4.8 1.7 4.9 4.9.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 3.2-1.7 4.8-4.9 4.9-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-3.3-.1-4.8-1.7-4.9-4.9C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8C2.4 3.9 4 2.4 7.2 2.3 8.4 2.2 8.8 2.2 12 2.2ZM12 0C8.7 0 8.3 0 7.1.1 2.7.3.3 2.7.1 7.1 0 8.3 0 8.7 0 12s0 3.7.1 4.9c.2 4.4 2.6 6.8 7 7C8.3 24 8.7 24 12 24s3.7 0 4.9-.1c4.4-.2 6.8-2.6 7-7 .1-1.2.1-1.6.1-4.9s0-3.7-.1-4.9c-.2-4.4-2.6-6.8-7-7C15.7 0 15.3 0 12 0Zm0 5.8a6.2 6.2 0 1 0 0 12.4 6.2 6.2 0 0 0 0-12.4ZM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm6.4-11.8a1.4 1.4 0 1 0 0 2.9 1.4 1.4 0 0 0 0-2.9Z"/></svg></span>
+          <span class="meta"><span class="title">@vibhorxz</span><span class="sub">Instagram</span></span>
+          <span class="actions">
+            <button class="pill-btn square" data-copy="vibhorxz" aria-label="Copy Instagram username"><svg class="stroke" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+            <a class="pill-btn square" href="https://instagram.com/vibhorxz" target="_blank" rel="noopener" aria-label="Open Instagram profile"><svg class="stroke" viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg></a>
+          </span>
+        </li>
+      </ul>
+    </section>
+
+  </main>
+</div>
+
+<div class="fade-bottom" aria-hidden="true"></div>
+<div class="player" id="player" hidden>
+  <a class="player-link" id="playerLink" href="https://open.spotify.com/" target="_blank" rel="noopener">open in spotify</a>
+  <button class="player-x" id="playerX" aria-label="Close player"><svg class="stroke" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+  <iframe id="playerFrame" title="Spotify player" width="100%" height="80" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+</div>
+<div class="views" id="views"><svg class="stroke" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg><span id="viewcount">···</span> views</div>
+<div class="touch" id="touch" aria-hidden="true"><i></i></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="pages">
+  <a href="#/" data-route="/" aria-label="Home" title="home"><svg class="stroke" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></a>
+  <a href="#/music" data-route="/music" aria-label="Music" title="music"><svg class="stroke" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></a>
+  <a href="#/projects" data-route="/projects" aria-label="Projects" title="projects"><svg class="stroke" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></a>
+  <a href="#/skills" data-route="/skills" aria-label="Skills" title="skills"><svg class="stroke" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg></a>
+  <a href="#/links" data-route="/links" aria-label="Links" title="links"><svg class="stroke" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>
+  <a href="#/contact" data-route="/contact" aria-label="Contact" title="contact"><svg class="stroke" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></a>
+</nav>
+
+<script>
+(function () {
+  var main = document.getElementById('main');
+  var wrap = document.getElementById('wrap');
+  var ambient = document.getElementById('ambient');
+  var toast = document.getElementById('toast');
+  var pages = Array.prototype.slice.call(document.querySelectorAll('.page'));
+  var links = Array.prototype.slice.call(document.querySelectorAll('.dock a'));
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var current = null;
+  var toastTimer;
+  var bannerSrc = document.querySelector('.banner').src;
+  var avatarSrc = document.querySelector('.project-title img').src;
+  var pageArt = {};
+
+  function say(msg) {
+    toast.textContent = msg;
+    toast.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove('on'); }, 2600);
+  }
+
+  function valid(r) { return pages.some(function (p) { return p.dataset.route === r; }); }
+  function routeFromHash() {
+    var r = (location.hash || '#/').replace(/^#/, '') || '/';
+    return valid(r) ? r : '/';
+  }
+
+  function show(route) {
+    var active = null;
+    pages.forEach(function (p) {
+      var on = p.dataset.route === route;
+      p.classList.toggle('active', on);
+      if (on) active = p;
+    });
+    links.forEach(function (a) {
+      if (a.dataset.route === route) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
+    });
+    wrap.classList.toggle('home', !!active.dataset.home);
+    document.body.dataset.route = route;
+    document.title = active.dataset.title;
+    document.documentElement.classList.add('ready');
+    var src = pageArt[route];
+    if (src) { ambient.style.backgroundImage = 'url("' + src + '")'; ambient.classList.add('on'); }
+    else { ambient.classList.remove('on'); }
+    Array.prototype.forEach.call(active.querySelectorAll('.card, .chip, .intro, .icon-btn, .tile'), function (el, i) {
+      el.style.setProperty('--i', i);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function render(route) {
+    if (route === current) return;
+    var first = current === null;
+    current = route;
+    if (first || reduce) { show(route); return; }
+    main.classList.add('leaving');
+    setTimeout(function () {
+      show(route);
+      main.classList.remove('leaving');
+      main.classList.add('entering');
+      void main.offsetWidth;
+      main.classList.remove('entering');
+    }, 240);
+  }
+
+  // nav works even where the address bar / hash can't change (previews, sandboxes)
+  links.forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var r = a.dataset.route;
+      try { history.replaceState(null, '', '#' + r); } catch (err) {}
+      render(r);
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.intro a[data-route]'), function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var r = a.dataset.route;
+      try { history.replaceState(null, '', '#' + r); } catch (err) {}
+      render(r);
+    });
+  });
+  window.addEventListener('hashchange', function () { render(routeFromHash()); });
+  render(routeFromHash());
+
+  function copyText(text, ok) {
+    function fallback() {
+      var t = document.createElement('textarea');
+      t.value = text; t.setAttribute('readonly', '');
+      t.style.position = 'fixed'; t.style.top = '0'; t.style.opacity = '0';
+      document.body.appendChild(t); t.select(); t.setSelectionRange(0, text.length);
+      var good = false;
+      try { good = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(t);
+      if (good) ok(); else say('copy blocked here. it is: ' + text);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(ok, fallback);
+    } else { fallback(); }
+  }
+
+  // outside links: open a new tab, or copy the link if the page blocks popups
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[target="_blank"]');
+    if (!a) return;
+    e.preventDefault();
+    var url = a.href;
+    var w = null;
+    try { w = window.open(url, '_blank'); } catch (err) {}
+    if (w) { try { w.opener = null; } catch (err) {} return; }
+    copyText(url, function () { say('this preview blocks new tabs. link copied, paste it in your browser.'); });
+  });
+
+  // copy buttons
+  Array.prototype.forEach.call(document.querySelectorAll('[data-copy]'), function (b) {
+    var label = b.querySelector('span');
+    var original = label ? label.textContent : '';
+    b.addEventListener('click', function () {
+      copyText(b.getAttribute('data-copy'), function () {
+        b.classList.add('ok');
+        if (label) label.textContent = 'copied';
+        say('copied');
+        setTimeout(function () { b.classList.remove('ok'); if (label) label.textContent = original; }, 1400);
+      });
+    });
+  });
+
+  // album art glow behind the music list
+  Array.prototype.forEach.call(document.querySelectorAll('a.track'), function (a) {
+    function on() {
+      if (!a.dataset.cover) return;
+      ambient.style.backgroundImage = 'url("' + a.dataset.cover + '")';
+      ambient.classList.add('on');
+    }
+    function off() { ambient.classList.remove('on'); }
+    a.addEventListener('mouseenter', on);
+    a.addEventListener('focus', on);
+    a.addEventListener('touchstart', on, { passive: true });
+    a.addEventListener('mouseleave', off);
+    a.addEventListener('blur', off);
+  });
+
+  // play songs inside the site with Spotify's embedded player
+  var player = document.getElementById('player');
+  var frame = document.getElementById('playerFrame');
+  var trackLinks = Array.prototype.slice.call(document.querySelectorAll('a.track'));
+  function trackId(a) { return (a.getAttribute('href').split('/track/')[1] || '').split('?')[0]; }
+  function playTrack(id) {
+    frame.src = 'https://open.spotify.com/embed/track/' + id + '?utm_source=generator&theme=0';
+    document.getElementById('playerLink').href = 'https://open.spotify.com/track/' + id;
+    player.hidden = false;
+    document.body.classList.add('player-open');
+    trackLinks.forEach(function (l) { l.classList.toggle('playing', trackId(l) === id); });
+  }
+  trackLinks.forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      var id = trackId(a);
+      if (!id) return; // no player link yet: falls through and opens the Spotify search
+      e.preventDefault(); e.stopPropagation();
+      playTrack(id);
+    });
+  });
+  document.getElementById('playerX').addEventListener('click', function () {
+    frame.src = 'about:blank';
+    player.hidden = true;
+    document.body.classList.remove('player-open');
+    trackLinks.forEach(function (l) { l.classList.remove('playing'); });
+  });
+
+  // music tabs
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  tabs.forEach(function (b) {
+    b.addEventListener('click', function () {
+      tabs.forEach(function (o) {
+        var on = o === b;
+        o.classList.toggle('on', on);
+        o.setAttribute('aria-selected', on ? 'true' : 'false');
+        document.getElementById('panel-' + o.dataset.tab).hidden = !on;
+      });
+      var panel = document.getElementById('panel-' + b.dataset.tab);
+      Array.prototype.forEach.call(panel.querySelectorAll('.tile, .card'), function (el, i) { el.style.setProperty('--i', i); });
+      ambient.classList.remove('on');
+    });
+  });
+
+  // views counter (free public counter service; hidden if it can't load)
+  var views = document.getElementById('views');
+  var vc = document.getElementById('viewcount');
+  try {
+    var seen = false;
+    try { seen = sessionStorage.getItem('zen-viewed') === '1'; } catch (err) {}
+    fetch('https://api.counterapi.dev/v1/whiniesttt-site/views/' + (seen ? '' : 'up'))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && typeof d.count === 'number') {
+          vc.textContent = d.count.toLocaleString();
+          try { sessionStorage.setItem('zen-viewed', '1'); } catch (err) {}
+        } else { views.style.display = 'none'; }
+      })
+      .catch(function () { views.style.display = 'none'; });
+  } catch (err) { views.style.display = 'none'; }
+
+  // circle that shows where you touch (and follows the mouse on desktop)
+  var ring = document.getElementById('touch');
+  function placeRing(px, py) { ring.style.transform = 'translate3d(' + px + 'px,' + py + 'px,0)'; }
+  function ringOn(px, py) { placeRing(px, py); ring.classList.add('on'); }
+  function ringOff() { ring.classList.remove('on'); }
+  addEventListener('touchstart', function (e) { var p = e.touches[0]; ringOn(p.clientX, p.clientY); }, { passive: true });
+  addEventListener('touchmove', function (e) { var p = e.touches[0]; placeRing(p.clientX, p.clientY); }, { passive: true });
+  addEventListener('touchend', ringOff, { passive: true });
+  addEventListener('touchcancel', ringOff, { passive: true });
+  addEventListener('pointermove', function (e) { if (e.pointerType === 'mouse') ringOn(e.clientX, e.clientY); }, { passive: true });
+  document.documentElement.addEventListener('mouseleave', ringOff);
+  // the glow eases toward wherever you touch or move
+  var spot = document.getElementById('spot');
+  var sx = innerWidth / 2, sy = innerHeight * 0.32, gx = sx, gy = sy, gliding = false;
+  function glide() {
+    sx += (gx - sx) * 0.08; sy += (gy - sy) * 0.08;
+    spot.style.transform = 'translate3d(' + sx.toFixed(1) + 'px,' + sy.toFixed(1) + 'px,0)';
+    if (Math.abs(gx - sx) > 0.5 || Math.abs(gy - sy) > 0.5) requestAnimationFrame(glide); else gliding = false;
+  }
+  function aim(px, py) { gx = px; gy = py; if (!gliding && !reduce) { gliding = true; requestAnimationFrame(glide); } }
+  addEventListener('pointermove', function (e) { aim(e.clientX, e.clientY); }, { passive: true });
+  addEventListener('touchstart', function (e) { aim(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+  addEventListener('touchmove', function (e) { aim(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+})();
+</script>
+</body>
+</html>
