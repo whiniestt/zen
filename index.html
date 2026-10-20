@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="boot">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -395,6 +395,43 @@
   }
   body[data-route="/music"], body[data-route="/links"] { --spot: rgba(125, 105, 255, .15); }
 
+
+  /* opening loader: name rises in, line fills, curtain lifts. Pure CSS so it can never get stuck. */
+  .loader {
+    position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+    background: radial-gradient(60% 45% at 50% 42%, #14141a, var(--bg) 70%), var(--bg);
+    border-radius: 0 0 50% 50% / 0 0 56px 56px;
+    animation: curtain .85s cubic-bezier(.77, 0, .18, 1) 1.55s forwards;
+  }
+  @keyframes curtain { to { transform: translateY(-104%); visibility: hidden; } }
+  .loader .word { display: flex; overflow: hidden; padding: 0 6px 10px; font-size: clamp(64px, 20vw, 110px); font-weight: 700; letter-spacing: -0.05em; line-height: 1.05; }
+  .loader .word span { display: inline-block; transform: translateY(115%); animation: letterIn .8s var(--ease) forwards; }
+  .loader .word span:nth-child(1) { animation-delay: .1s; }
+  .loader .word span:nth-child(2) { animation-delay: .19s; }
+  .loader .word span:nth-child(3) { animation-delay: .28s; }
+  @keyframes letterIn { to { transform: none; } }
+  .loader .bar { width: 150px; height: 2px; border-radius: 2px; background: rgba(255,255,255,.1); overflow: hidden; opacity: 0; animation: fadeIn .4s ease .35s forwards; }
+  .loader .bar i { display: block; height: 100%; background: #fff; transform: scaleX(0); transform-origin: left; animation: fill 1.2s cubic-bezier(.65, 0, .35, 1) .4s forwards; }
+  @keyframes fill { to { transform: scaleX(1); } }
+  .loader .pct { font-family: var(--mono); font-size: 12px; color: var(--muted); opacity: 0; animation: fadeIn .4s ease .35s forwards; }
+  .loader .pct b { font-weight: 500; color: var(--body); }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  /* the page itself arrives right after the curtain */
+  .boot .page.active .eyebrow, .boot .page.active h1, .boot .page.active .handle { animation: rise .8s var(--ease) backwards; animation-delay: 1.95s; }
+  .boot .page.active h1 { animation-delay: 2.02s; }
+  .boot .page.active .handle { animation-delay: 2.1s; }
+  .boot .page.active .card, .boot .page.active .chip, .boot .page.active .intro, .boot .page.active .icon-btn, .boot .page.active .tile { animation-delay: calc(2.05s + var(--i, 0) * 55ms); }
+  @keyframes dockIn { from { opacity: 0; transform: translateX(-50%) translateY(18px); } }
+  .boot .dock { animation: dockIn .7s var(--ease) 2.3s backwards; }
+  @media (prefers-reduced-motion: reduce) {
+    .loader { animation: loaderFade .35s ease .5s forwards; border-radius: 0; }
+    @keyframes loaderFade { to { opacity: 0; visibility: hidden; } }
+    .loader .word span, .loader .bar i { animation: none; transform: none; }
+    .loader .bar, .loader .pct { animation: none; opacity: 1; }
+    .boot .page.active .eyebrow, .boot .page.active h1, .boot .page.active .handle, .boot .dock { animation: none; }
+  }
+
   @media (min-width: 700px) {
     body { font-size: 16px; }
     .wrap { padding-top: 80px; }
@@ -417,6 +454,11 @@
 </style>
 </head>
 <body>
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="word"><span>z</span><span>e</span><span>n</span></div>
+  <div class="bar"><i></i></div>
+  <div class="pct"><b id="pct">0</b>%</div>
+</div>
 <div class="spot" id="spot" aria-hidden="true"></div>
 <div class="aura" aria-hidden="true"></div>
 <div class="ambient" id="ambient" aria-hidden="true"></div>
@@ -869,6 +911,17 @@
   addEventListener('pointermove', function (e) { aim(e.clientX, e.clientY); }, { passive: true });
   addEventListener('touchstart', function (e) { aim(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
   addEventListener('touchmove', function (e) { aim(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+  // opening loader counter
+  var pct = document.getElementById('pct');
+  var t0 = performance.now() + 400;
+  (function count(now) {
+    var p = Math.max(0, Math.min(1, (now - t0) / 1200));
+    var e = p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+    pct.textContent = Math.round(e * 100);
+    if (p < 1) requestAnimationFrame(count);
+  })(performance.now());
+  setTimeout(function () { document.documentElement.classList.remove('boot'); }, 3600);
+
 })();
 </script>
 </body>
