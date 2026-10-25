@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>zen</title>
-<meta name="description" content="zen's little corner of the internet">
+<title>frost</title>
+<meta name="description" content="frost's little corner of the internet">
 <meta name="theme-color" content="#0a0a0b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -190,28 +190,28 @@
   .dock {
     position: fixed; z-index: 10;
     left: 50%; transform: translateX(-50%);
-    bottom: calc(18px + env(safe-area-inset-bottom));
-    display: flex; gap: 4px; padding: 5px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    display: flex; gap: 2px; padding: 4px;
     border: 1px solid var(--line);
-    border-radius: 16px;
+    border-radius: 14px;
     background: rgba(16, 16, 18, 0.78);
     -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
     box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
   }
   .dock a {
-    width: 42px; height: 38px;
+    width: 36px; height: 32px;
     display: grid; place-items: center;
-    border-radius: 11px;
+    border-radius: 10px;
     border: 1px solid transparent;
     color: var(--muted);
     transition: color .2s, background .2s, border-color .2s, transform .25s var(--ease);
   }
   .dock a:hover { color: #fff; transform: translateY(-2px); }
   .dock a[aria-current="page"] { color: #fff; background: rgba(255, 255, 255, 0.1); border-color: var(--line-strong); }
-  .dock svg { width: 18px; height: 18px; }
+  .dock svg { width: 16px; height: 16px; }
 
   .toast {
-    position: fixed; z-index: 20; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom));
+    position: fixed; z-index: 20; left: 50%; bottom: calc(70px + env(safe-area-inset-bottom));
     transform: translate(-50%, 8px); max-width: min(92vw, 420px);
     padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.4; text-align: center;
     background: rgba(24, 24, 27, .96); border: 1px solid var(--line-strong); color: var(--text);
@@ -277,7 +277,7 @@
   .page.active .tile { animation: rise .55s var(--ease) backwards; animation-delay: calc(var(--i, 0) * 55ms); }
 
   /* views */
-  .views { position: fixed; z-index: 4; bottom: calc(80px + env(safe-area-inset-bottom)); right: max(18px, calc((100vw - 620px) / 2)); display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 500; pointer-events: none; }
+  .views { position: fixed; z-index: 4; bottom: calc(62px + env(safe-area-inset-bottom)); right: max(18px, calc((100vw - 620px) / 2)); display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 500; pointer-events: none; }
   .views svg { width: 13px; height: 13px; }
 
   /* textured, moving background */
@@ -319,7 +319,7 @@
   /* in-site music player */
   .player {
     position: fixed; z-index: 9; left: 50%; transform: translateX(-50%);
-    bottom: calc(76px + env(safe-area-inset-bottom));
+    bottom: calc(62px + env(safe-area-inset-bottom));
     width: min(620px, 100% - 32px);
     padding: 6px; border-radius: 18px;
     border: 1px solid var(--line);
@@ -345,7 +345,7 @@
   .player-link:hover { color: #fff; }
   .player-x:hover { color: #fff; transform: scale(1.08); }
   .player-x svg { width: 12px; height: 12px; }
-  body.player-open .views { bottom: calc(172px + env(safe-area-inset-bottom)); }
+  body.player-open .views { bottom: calc(158px + env(safe-area-inset-bottom)); }
   body.player-open .wrap { padding-bottom: 240px; }
   .tile.playing, .row.playing { border-color: rgba(255,255,255,.42); }
   .tile.playing::after {
@@ -404,11 +404,13 @@
     animation: curtain .85s cubic-bezier(.77, 0, .18, 1) 1.55s forwards;
   }
   @keyframes curtain { to { transform: translateY(-104%); visibility: hidden; } }
-  .loader .word { display: flex; overflow: hidden; padding: 0 6px 10px; font-size: clamp(64px, 20vw, 110px); font-weight: 700; letter-spacing: -0.05em; line-height: 1.05; }
+  .loader .word { display: flex; overflow: hidden; padding: 0 6px 10px; font-size: clamp(46px, 13vw, 76px); font-weight: 700; letter-spacing: -0.05em; line-height: 1.05; }
   .loader .word span { display: inline-block; transform: translateY(115%); animation: letterIn .8s var(--ease) forwards; }
   .loader .word span:nth-child(1) { animation-delay: .1s; }
   .loader .word span:nth-child(2) { animation-delay: .19s; }
   .loader .word span:nth-child(3) { animation-delay: .28s; }
+  .loader .word span:nth-child(4) { animation-delay: .37s; }
+  .loader .word span:nth-child(5) { animation-delay: .46s; }
   @keyframes letterIn { to { transform: none; } }
   .loader .bar { width: 150px; height: 2px; border-radius: 2px; background: rgba(255,255,255,.1); overflow: hidden; opacity: 0; animation: fadeIn .4s ease .35s forwards; }
   .loader .bar i { display: block; height: 100%; background: #fff; transform: scaleX(0); transform-origin: left; animation: fill 1.2s cubic-bezier(.65, 0, .35, 1) .4s forwards; }
@@ -433,25 +435,12 @@
   }
 
 
-  /* looping, silent video background */
-  .bgvid { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; pointer-events: none; opacity: 1; transition: opacity .45s ease; background: #060607; }
-  .bgvid.out { opacity: 0; }
-  .bgshade { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: linear-gradient(rgba(8,8,10,.62), rgba(8,8,10,.74)); transition: background .6s ease; }
-  body[data-route="/music"] .bgshade, body[data-route="/links"] .bgshade { background: linear-gradient(rgba(8,10,32,.7), rgba(8,10,32,.8)); }
   .project-actions { display: flex; flex-wrap: wrap; gap: 10px; }
   .btn { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 20px; border-radius: 999px; background: var(--text); color: #0a0a0b; font-weight: 600; font-size: 14px; transition: transform .2s var(--ease), background .2s, opacity .2s; }
   .btn:hover { transform: translateY(-2px); opacity: .92; }
   .btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
   .btn.ghost { background: rgba(255,255,255,.08); color: var(--text); border: 1px solid var(--line-strong); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
   .btn.ghost:hover { background: rgba(255,255,255,.14); opacity: 1; }
-  /* phones: skip the live blur behind glass so the video stays perfectly smooth */
-  @media (hover: none) and (pointer: coarse) {
-    :root { --card: linear-gradient(145deg, rgba(40,40,48,.62), rgba(16,16,20,.62)); --card-hover: linear-gradient(145deg, rgba(52,52,62,.7), rgba(20,20,26,.7)); }
-    .card, .intro, .icon-btn, .chip, .pill-btn, .tabs, .btn.ghost { -webkit-backdrop-filter: none; backdrop-filter: none; }
-    .dock { background: rgba(16,16,20,.82); -webkit-backdrop-filter: none; backdrop-filter: none; }
-    .player { background: rgba(16,16,20,.88); -webkit-backdrop-filter: none; backdrop-filter: none; }
-  }
-  @media (prefers-reduced-motion: reduce) { .bgvid { transition: none; } }
 
   @media (min-width: 700px) {
     body { font-size: 16px; }
@@ -475,13 +464,8 @@
 </style>
 </head>
 <body>
-<video class="bgvid" id="bgvid" autoplay muted loop playsinline preload="auto" poster="bg-poster.jpg" aria-hidden="true" tabindex="-1">
-  <source src="bg.mp4" type="video/mp4">
-  <source src="bg.webm" type="video/webm">
-</video>
-<div class="bgshade" aria-hidden="true"></div>
 <div class="loader" id="loader" aria-hidden="true">
-  <div class="word"><span>z</span><span>e</span><span>n</span></div>
+  <div class="word"><span>f</span><span>r</span><span>o</span><span>s</span><span>t</span></div>
   <div class="bar"><i></i></div>
   <div class="pct"><b id="pct">0</b>%</div>
 </div>
@@ -493,9 +477,9 @@
   <main id="main" tabindex="-1">
 
     <!-- home -->
-    <section class="page" data-route="/" data-title="zen" data-home="1">
+    <section class="page" data-route="/" data-title="frost" data-home="1">
       <div class="eyebrow">hey there</div>
-      <h1>zen</h1>
+      <h1>frost</h1>
       <div class="handle">@whiniesttt</div>
       <div class="intro">i make random stuff with code when i'm bored. sometimes it works. check out my <a href="#/projects" data-route="/projects">projects</a> or find me on <a href="https://discord.com/users/1530872106399567941" target="_blank" rel="noopener">discord</a> or <a href="https://instagram.com/caffeinewave" target="_blank" rel="noopener">instagram</a>.</div>
       <div class="socials">
@@ -512,7 +496,7 @@
     </section>
 
     <!-- music -->
-    <section class="page" data-route="/music" data-title="music · zen">
+    <section class="page" data-route="/music" data-title="music · frost">
       <div class="eyebrow">my taste</div>
       <h2>music</h2>
       <p class="intro-text">what's been on repeat for the past month</p>
@@ -601,7 +585,7 @@
     </section>
 
     <!-- projects -->
-    <section class="page" data-route="/projects" data-title="projects · zen">
+    <section class="page" data-route="/projects" data-title="projects · frost">
       <div class="eyebrow">my work</div>
       <h2>projects</h2>
       <p class="intro-text">stuff i'm building.</p>
@@ -619,7 +603,7 @@
     </section>
 
     <!-- skills -->
-    <section class="page" data-route="/skills" data-title="skills · zen">
+    <section class="page" data-route="/skills" data-title="skills · frost">
       <div class="eyebrow">my tech stack</div>
       <h2>skills</h2>
       <p class="intro-text">what i use to build things.</p>
@@ -636,7 +620,7 @@
     </section>
 
     <!-- links -->
-    <section class="page" data-route="/links" data-title="biolinks · zen">
+    <section class="page" data-route="/links" data-title="biolinks · frost">
       <div class="eyebrow">link-in-bio</div>
       <h2>biolinks</h2>
       <p class="intro-text">my biolinks</p>
@@ -657,7 +641,7 @@
     </section>
 
     <!-- contact -->
-    <section class="page" data-route="/contact" data-title="contact · zen">
+    <section class="page" data-route="/contact" data-title="contact · frost">
       <div class="eyebrow">get in touch</div>
       <h2>contact</h2>
       <p class="intro-text">open for collabs, questions, or just a hello — discord's fastest, but pick whatever works.</p>
@@ -903,13 +887,13 @@
   var vc = document.getElementById('viewcount');
   try {
     var seen = false;
-    try { seen = sessionStorage.getItem('zen-viewed') === '1'; } catch (err) {}
+    try { seen = sessionStorage.getItem('frost-viewed') === '1'; } catch (err) {}
     fetch('https://api.counterapi.dev/v1/whiniesttt-site/views/' + (seen ? '' : 'up'))
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (d && typeof d.count === 'number') {
           vc.textContent = d.count.toLocaleString();
-          try { sessionStorage.setItem('zen-viewed', '1'); } catch (err) {}
+          try { sessionStorage.setItem('frost-viewed', '1'); } catch (err) {}
         } else { views.style.display = 'none'; }
       })
       .catch(function () { views.style.display = 'none'; });
@@ -948,20 +932,6 @@
     if (p < 1) requestAnimationFrame(count);
   })(performance.now());
   setTimeout(function () { document.documentElement.classList.remove('boot'); }, 3600);
-
-  // background video: silent, fades at the loop point, never autoplays for reduced-motion users
-  var vid = document.getElementById('bgvid');
-  vid.muted = true; vid.defaultMuted = true; vid.volume = 0;
-  if (reduce) { vid.removeAttribute('autoplay'); vid.pause(); }
-  else {
-    var go = vid.play(); if (go && go.catch) go.catch(function () {});
-    vid.addEventListener('timeupdate', function () {
-      if (vid.duration && vid.duration - vid.currentTime < 0.45) vid.classList.add('out');
-      else if (vid.currentTime < 0.35) vid.classList.remove('out');
-    });
-    document.addEventListener('visibilitychange', function () { if (!document.hidden) { var p = vid.play(); if (p && p.catch) p.catch(function () {}); } });
-    addEventListener('touchstart', function once() { var p = vid.play(); if (p && p.catch) p.catch(function () {}); removeEventListener('touchstart', once); }, { passive: true });
-  }
 
 })();
 </script>
